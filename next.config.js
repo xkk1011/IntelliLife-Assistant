@@ -8,13 +8,11 @@ const nextConfig = {
     // 在构建时忽略TypeScript错误
     ignoreBuildErrors: true,
   },
-  experimental: {
-    // 启用服务器组件
-    serverComponentsExternalPackages: ['prisma'],
-  },
+  // 外部包配置
+  serverExternalPackages: ["prisma"],
   images: {
-    domains: ['localhost'],
+    domains: ["localhost"],
   },
-}
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;
