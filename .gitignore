@@ -1,0 +1,168 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# ===== Node.js Dependencies =====
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# ===== Testing =====
+/coverage
+/test-results/
+/playwright-report/
+/playwright/.cache/
+*.lcov
+.nyc_output
+
+# ===== Next.js =====
+/.next/
+/out/
+.next
+
+# ===== Production Builds =====
+/build
+/dist
+/public/build
+
+# ===== Environment Variables =====
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.staging
+
+# ===== Logs =====
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+lerna-debug.log*
+
+# ===== Runtime Data =====
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# ===== Coverage Directory =====
+lib-cov
+coverage
+*.lcov
+.nyc_output
+
+# ===== Dependency Directories =====
+node_modules/
+jspm_packages/
+
+# ===== TypeScript =====
+*.tsbuildinfo
+next-env.d.ts
+*.d.ts.map
+
+# ===== IDE & Editor Files =====
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# ===== OS Generated Files =====
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# ===== Temporary Files =====
+*.tmp
+*.temp
+*.cache
+.cache/
+.parcel-cache/
+
+# ===== Database =====
+*.db
+*.sqlite
+*.sqlite3
+/prisma/dev.db
+/prisma/dev.db-journal
+
+# ===== Generated Files =====
+/src/generated/prisma
+*.generated.*
+
+# ===== Upload Files =====
+public/uploads/
+uploads/
+public/uploads/videos/**/*.mp4
+public/uploads/images/**/*
+public/uploads/documents/**/*
+
+# ===== SSL Certificates =====
+*.pem
+*.key
+*.crt
+*.cert
+
+# ===== Backup Files =====
+*.bak
+*.backup
+*.old
+*.orig
+
+# ===== Deployment =====
+.vercel
+.netlify
+.firebase/
+.serverless/
+
+# ===== Docker =====
+Dockerfile.local
+docker-compose.override.yml
+.dockerignore.local
+
+# ===== Monitoring & Analytics =====
+.sentry/
+.lighthouse/
+
+# ===== Package Manager =====
+.npm
+.eslintcache
+.stylelintcache
+
+# ===== Local Configuration =====
+config/local.json
+config/development.json
+config/production.json
+
+# ===== Misc =====
+*.tgz
+*.tar.gz
+.grunt
+.lock-wscript
+.wafpickle-*
+.node_repl_history
+.yarn-integrity
+.env.npm
+
+
+# ===== Custom =====
+doc/*

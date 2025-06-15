@@ -1,0 +1,311 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// 用户相关模型
+model User {
+  id        String     @id @default(cuid())
+  email     String     @unique
+  name      String?
+  password  String
+  role      Role       @default(USER)
+  status    UserStatus @default(ACTIVE)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  // 关联关系
+  glowPlans        GlowPlan[]
+  fitnessItems     FitnessItem[]
+  notifications    Notification[]
+  glowAreas        GlowArea[]
+  glowDevices      GlowDevice[]
+  userVideos       UserVideo[]
+  glowHistory      GlowHistory[]
+  fitnessHistory   FitnessHistory[]
+  glowReminders    GlowReminder[]
+  fitnessReminders FitnessReminder[]
+
+  @@map("users")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+// 焕肤计划相关模型
+model GlowPlan {
+  id        String     @id @default(cuid())
+  userId    String
+  name      String
+  startDate DateTime
+  status    PlanStatus @default(ACTIVE)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  areas     GlowPlanArea[]
+  devices   GlowPlanDevice[]
+  reminders GlowReminder[]
+  history   GlowHistory[]
+
+  @@map("glow_plans")
+}
+
+// 焕肤计划与部位的多对多关系
+model GlowPlanArea {
+  id     String @id @default(cuid())
+  planId String
+  areaId String
+
+  plan GlowPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  area GlowArea @relation(fields: [areaId], references: [id], onDelete: Cascade)
+
+  @@unique([planId, areaId])
+  @@map("glow_plan_areas")
+}
+
+// 焕肤计划与设备的多对多关系
+model GlowPlanDevice {
+  id       String @id @default(cuid())
+  planId   String
+  deviceId String
+
+  plan   GlowPlan   @relation(fields: [planId], references: [id], onDelete: Cascade)
+  device GlowDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@unique([planId, deviceId])
+  @@map("glow_plan_devices")
+}
+
+model GlowArea {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  createdAt DateTime @default(now())
+
+  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plans        GlowPlanArea[]
+  historyAreas GlowHistoryArea[]
+
+  @@map("glow_areas")
+}
+
+model GlowDevice {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  model     String?
+  createdAt DateTime @default(now())
+
+  user           User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plans          GlowPlanDevice[]
+  historyDevices GlowHistoryDevice[]
+
+  @@map("glow_devices")
+}
+
+// 运动计划相关模型
+model FitnessItem {
+  id              String     @id @default(cuid())
+  userId          String
+  name            String
+  plannedDuration Int? // 分钟
+  plannedSets     Int?
+  plannedReps     Int?
+  videoId         String? // 保留用于向后兼容，但将逐步废弃
+  status          PlanStatus @default(ACTIVE)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  user      User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  video     UserVideo?           @relation(fields: [videoId], references: [id]) // 保留用于向后兼容
+  videos    FitnessItemVideo[]   // 新的多对多关系
+  reminders FitnessReminder[]
+  history   FitnessHistory[]
+
+  @@map("fitness_items")
+}
+
+model UserVideo {
+  id           String   @id @default(cuid())
+  userId       String
+  filename     String
+  originalName String
+  mimeType     String
+  size         Int
+  path         String // 本地文件路径
+  url          String // 访问URL路径
+  createdAt    DateTime @default(now())
+
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fitnessItems FitnessItem[]       // 保留用于向后兼容
+  videos       FitnessItemVideo[]  // 新的多对多关系
+
+  @@map("user_videos")
+}
+
+// 运动条目与视频的多对多关系表
+model FitnessItemVideo {
+  id           String @id @default(cuid())
+  fitnessItemId String
+  videoId      String
+  createdAt    DateTime @default(now())
+
+  fitnessItem FitnessItem @relation(fields: [fitnessItemId], references: [id], onDelete: Cascade)
+  video       UserVideo   @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@unique([fitnessItemId, videoId])
+  @@map("fitness_item_videos")
+}
+
+enum PlanStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+  ARCHIVED
+}
+
+// 提醒系统模型
+model GlowReminder {
+  id           String            @id @default(cuid())
+  planId       String
+  userId       String
+  frequency    ReminderFrequency
+  interval     Int // 间隔天数或周数
+  time         String // HH:mm 格式
+  weekdays     String? // JSON数组，存储周几 [1,3,5]
+  nextReminder DateTime
+  isActive     Boolean           @default(true)
+  createdAt    DateTime          @default(now())
+
+  plan GlowPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  user User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("glow_reminders")
+}
+
+model FitnessReminder {
+  id           String            @id @default(cuid())
+  itemId       String
+  userId       String
+  frequency    ReminderFrequency
+  interval     Int
+  time         String
+  weekdays     String?
+  nextReminder DateTime
+  isActive     Boolean           @default(true)
+  createdAt    DateTime          @default(now())
+
+  item FitnessItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  user User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("fitness_reminders")
+}
+
+enum ReminderFrequency {
+  DAILY
+  WEEKLY
+  CUSTOM
+}
+
+// 站内信模型
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  content   String
+  relatedId String? // 关联的计划或条目ID
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+enum NotificationType {
+  GLOW_REMINDER
+  FITNESS_REMINDER
+  SYSTEM
+  ACHIEVEMENT
+}
+
+// 历史记录模型
+model GlowHistory {
+  id          String   @id @default(cuid())
+  planId      String
+  userId      String
+  duration    Int? // 分钟
+  completedAt DateTime
+  notes       String?
+  createdAt   DateTime @default(now())
+
+  plan    GlowPlan            @relation(fields: [planId], references: [id], onDelete: Cascade)
+  user    User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  areas   GlowHistoryArea[]
+  devices GlowHistoryDevice[]
+
+  @@map("glow_history")
+}
+
+// 历史记录与部位的多对多关系
+model GlowHistoryArea {
+  id        String @id @default(cuid())
+  historyId String
+  areaId    String
+
+  history GlowHistory @relation(fields: [historyId], references: [id], onDelete: Cascade)
+  area    GlowArea    @relation(fields: [areaId], references: [id], onDelete: Cascade)
+
+  @@unique([historyId, areaId])
+  @@map("glow_history_areas")
+}
+
+// 历史记录与设备的多对多关系
+model GlowHistoryDevice {
+  id        String @id @default(cuid())
+  historyId String
+  deviceId  String
+
+  history GlowHistory @relation(fields: [historyId], references: [id], onDelete: Cascade)
+  device  GlowDevice  @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@unique([historyId, deviceId])
+  @@map("glow_history_devices")
+}
+
+model FitnessHistory {
+  id          String   @id @default(cuid())
+  itemId      String
+  userId      String
+  duration    Int? // 分钟
+  sets        Int?
+  reps        Int?
+  completedAt DateTime
+  notes       String?
+  createdAt   DateTime @default(now())
+
+  item FitnessItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  user User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("fitness_history")
+}
